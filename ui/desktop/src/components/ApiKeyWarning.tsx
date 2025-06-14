@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocalization } from '@fluent/react';
 import { Card } from './ui/card';
 import { Bird } from './ui/icons';
 import { ChevronDown } from './icons';
@@ -52,6 +53,7 @@ export GOOSE_PROVIDER__MODEL=anthropic/claude-3.5-sonnet
 export GOOSE_PROVIDER__API_KEY=your_api_key_here`;
 
 export function ApiKeyWarning({ className }: ApiKeyWarningProps) {
+  const { l10n } = useLocalization();
   return (
     <Card
       className={`flex flex-col items-center p-8 space-y-6 bg-card-gradient w-full h-full ${className}`}
@@ -60,30 +62,30 @@ export function ApiKeyWarning({ className }: ApiKeyWarningProps) {
         <Bird />
       </div>
       <div className="text-center space-y-4 max-w-2xl w-full">
-        <h2 className="text-2xl font-semibold text-gray-800">Credentials Required</h2>
+        <h2 className="text-2xl font-semibold text-gray-800">{l10n.getString('credentials-required')}</h2>
         <p className="text-gray-600 mb-4">
-          To use Goose, you need to set environment variables for one of the following providers:
+          {l10n.getString('credentials-description')}
         </p>
 
         <div className="text-left">
-          <Collapsible title="OpenAI Configuration" defaultOpen={true}>
+          <Collapsible title={l10n.getString('openai-configuration')} defaultOpen={true}>
             <pre className="bg-gray-50 p-4 rounded-md text-sm">{OPENAI_CONFIG}</pre>
           </Collapsible>
 
-          <Collapsible title="Anthropic (Claude) Configuration">
+          <Collapsible title={l10n.getString('anthropic-configuration')}>
             <pre className="bg-gray-50 p-4 rounded-md text-sm">{ANTHROPIC_CONFIG}</pre>
           </Collapsible>
 
-          <Collapsible title="Databricks Configuration">
+          <Collapsible title={l10n.getString('databricks-configuration')}>
             <pre className="bg-gray-50 p-4 rounded-md text-sm">{DATABRICKS_CONFIG}</pre>
           </Collapsible>
 
-          <Collapsible title="OpenRouter Configuration">
+          <Collapsible title={l10n.getString('openrouter-configuration')}>
             <pre className="bg-gray-50 p-4 rounded-md text-sm">{OPENROUTER_CONFIG}</pre>
           </Collapsible>
         </div>
         <p className="text-gray-600 mt-4">
-          After setting these variables, restart Goose for the changes to take effect.
+          {l10n.getString('credentials-after')}
         </p>
       </div>
     </Card>

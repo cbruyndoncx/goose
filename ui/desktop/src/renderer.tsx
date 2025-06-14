@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ConfigProvider } from './components/ConfigContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { I18nProvider } from './i18n';
 import { patchConsoleLogging } from './utils';
 import SuspenseLoader from './suspense-loader';
 
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <Suspense fallback={SuspenseLoader()}>
       <ConfigProvider>
         <ErrorBoundary>
-          <App />
+          <I18nProvider>
+            <App />
+          </I18nProvider>
         </ErrorBoundary>
       </ConfigProvider>
     </Suspense>

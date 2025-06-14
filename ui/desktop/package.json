@@ -85,6 +85,8 @@
   "dependencies": {
     "@ai-sdk/openai": "^0.0.72",
     "@ai-sdk/ui-utils": "^1.0.2",
+    "@fluent/bundle": "^0.19.1",
+    "@fluent/react": "^0.15.2",
     "@hey-api/client-fetch": "^0.8.1",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-avatar": "^1.1.1",
