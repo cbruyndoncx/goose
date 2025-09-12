@@ -1,4 +1,5 @@
 use goose::config::Config;
+
 use goose::providers::base::{ConfigKey, ProviderMetadata};
 use serde::{Deserialize, Serialize};
 use std::env;
