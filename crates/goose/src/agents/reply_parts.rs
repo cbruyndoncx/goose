@@ -18,6 +18,8 @@ use crate::providers::toolshim::{
 
 use crate::agents::recipe_tools::dynamic_task_tools::should_enabled_subagents;
 use crate::session::SessionManager;
+#[cfg(test)]
+use crate::session::SessionType;
 use rmcp::model::Tool;
 
 fn coerce_value(s: &str, schema: &Value) -> Value {
@@ -107,7 +109,10 @@ async fn toolshim_postprocess(
 }
 
 impl Agent {
-    pub async fn prepare_tools_and_prompt(&self) -> Result<(Vec<Tool>, Vec<Tool>, String)> {
+    pub async fn prepare_tools_and_prompt(
+        &self,
+        working_dir: &std::path::Path,
+    ) -> Result<(Vec<Tool>, Vec<Tool>, String)> {
         // Get router enabled status
         let router_enabled = self.tool_route_manager.is_router_enabled().await;
 
@@ -156,6 +161,7 @@ impl Agent {
             .with_frontend_instructions(self.frontend_instructions.lock().await.clone())
             .with_extension_and_tool_counts(extension_count, tool_count)
             .with_router_enabled(router_enabled)
+            .with_hints(working_dir)
             .build();
 
         // Handle toolshim if enabled
@@ -435,9 +441,16 @@ mod tests {
     ) -> anyhow::Result<()> {
         let agent = crate::agents::Agent::new();
 
+        let session = SessionManager::create_session(
+            std::path::PathBuf::default(),
+            "test-prepare-tools".to_string(),
+            SessionType::Hidden,
+        )
+        .await?;
+
         let model_config = ModelConfig::new("test-model").unwrap();
         let provider = std::sync::Arc::new(MockProvider { model_config });
-        agent.update_provider(provider).await?;
+        agent.update_provider(provider, &session.id).await?;
 
         // Disable the router to trigger sorting
         agent.disable_router_for_recipe().await;
@@ -468,7 +481,9 @@ mod tests {
             .await
             .unwrap();
 
-        let (tools, _toolshim_tools, _system_prompt) = agent.prepare_tools_and_prompt().await?;
+        let working_dir = std::env::current_dir()?;
+        let (tools, _toolshim_tools, _system_prompt) =
+            agent.prepare_tools_and_prompt(&working_dir).await?;
 
         // Ensure both platform and frontend tools are present
         let names: Vec<String> = tools.iter().map(|t| t.name.clone().into_owned()).collect();

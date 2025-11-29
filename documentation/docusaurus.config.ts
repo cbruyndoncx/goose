@@ -29,7 +29,12 @@ const config: Config = {
   projectName: "goose", // Usually your repo name.
 
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
+  
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: "warn",
+    },
+  },
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -315,6 +320,12 @@ const config: Config = {
       },
     ],
     tailwindPlugin,
+    [
+      require.resolve("./plugins/markdown-export.cjs"),
+      {
+        enabled: true,
+      },
+    ],
   ],
   themes: ["@inkeep/docusaurus/chatButton", "@inkeep/docusaurus/searchBar"],
   themeConfig: {
@@ -483,14 +494,14 @@ const config: Config = {
         quickQuestions: ["What is goose?"],
       },
     },
-    announcementBar: {
-      id: 'goose-grants',
-      content:
-        '✨ goose grant program now open: <a href="/goose/grants">apply now</a>! ✨',
-      backgroundColor: '#20232a',
-      textColor: '#fff',
-      isCloseable: false,
-    },
+    // announcementBar: {
+    //   id: 'goose-grants',
+    //   content:
+    //     '✨ goose grant program now open: <a href="/goose/grants">apply now</a>! ✨',
+    //   backgroundColor: '#20232a',
+    //   textColor: '#fff',
+    //   isCloseable: false,
+    // },
   } satisfies Preset.ThemeConfig,
 };
 

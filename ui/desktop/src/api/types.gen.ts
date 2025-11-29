@@ -32,6 +32,12 @@ export type ChatRequest = {
     session_id: string;
 };
 
+export type CheckProviderRequest = {
+    provider: string;
+};
+
+export type CommandType = 'Builtin' | 'Recipe';
+
 /**
  * Configuration key metadata for provider setup
  */
@@ -86,7 +92,6 @@ export type CreateRecipeResponse = {
 
 export type CreateScheduleRequest = {
     cron: string;
-    execution_mode?: string | null;
     id: string;
     recipe_source: string;
 };
@@ -117,6 +122,17 @@ export type DecodeRecipeResponse = {
 export type DeleteRecipeRequest = {
     id: string;
 };
+
+export type EditMessageRequest = {
+    editType?: EditType;
+    timestamp: number;
+};
+
+export type EditMessageResponse = {
+    sessionId: string;
+};
+
+export type EditType = 'fork' | 'edit';
 
 export type EmbeddedResource = {
     _meta?: {
@@ -319,7 +335,7 @@ export type KillJobResponse = {
 };
 
 export type ListRecipeResponse = {
-    recipe_manifest_responses: Array<RecipeManifestResponse>;
+    manifests: Array<RecipeManifest>;
 };
 
 export type ListSchedulesResponse = {
@@ -374,6 +390,7 @@ export type MessageEvent = {
     type: 'Error';
 } | {
     reason: string;
+    token_state: TokenState;
     type: 'Finish';
 } | {
     mode: string;
@@ -404,6 +421,16 @@ export type MessageMetadata = {
      * Whether the message should be visible to the user in the UI
      */
     userVisible: boolean;
+};
+
+export type ModelConfig = {
+    context_limit?: number | null;
+    fast_model?: string | null;
+    max_tokens?: number | null;
+    model_name: string;
+    temperature?: number | null;
+    toolshim: boolean;
+    toolshim_model?: string | null;
 };
 
 /**
@@ -547,7 +574,6 @@ export type RawTextContent = {
 export type Recipe = {
     activities?: Array<string> | null;
     author?: Author | null;
-    context?: Array<string> | null;
     description: string;
     extensions?: Array<ExtensionConfig> | null;
     instructions?: string | null;
@@ -561,10 +587,13 @@ export type Recipe = {
     version?: string;
 };
 
-export type RecipeManifestResponse = {
+export type RecipeManifest = {
+    file_path: string;
     id: string;
-    lastModified: string;
+    last_modified: string;
     recipe: Recipe;
+    schedule_cron?: string | null;
+    slash_command?: string | null;
 };
 
 export type RecipeParameter = {
@@ -663,6 +692,11 @@ export type ScanRecipeResponse = {
     has_security_warnings: boolean;
 };
 
+export type ScheduleRecipeRequest = {
+    cron_schedule?: string | null;
+    id: string;
+};
+
 export type ScheduledJob = {
     cron: string;
     current_session_id?: string | null;
@@ -684,8 +718,10 @@ export type Session = {
     id: string;
     input_tokens?: number | null;
     message_count: number;
+    model_config?: ModelConfig | null;
     name: string;
     output_tokens?: number | null;
+    provider_name?: string | null;
     recipe?: Recipe | null;
     schedule_id?: string | null;
     session_type?: SessionType;
@@ -728,7 +764,17 @@ export type SessionListResponse = {
 export type SessionType = 'user' | 'scheduled' | 'sub_agent' | 'hidden';
 
 export type SessionsQuery = {
-    limit?: number;
+    limit: number;
+};
+
+export type SetProviderRequest = {
+    model: string;
+    provider: string;
+};
+
+export type SetSlashCommandRequest = {
+    id: string;
+    slash_command?: string | null;
 };
 
 export type Settings = {
@@ -740,6 +786,16 @@ export type Settings = {
 export type SetupResponse = {
     message: string;
     success: boolean;
+};
+
+export type SlashCommand = {
+    command: string;
+    command_type: CommandType;
+    help: string;
+};
+
+export type SlashCommandsResponse = {
+    commands: Array<SlashCommand>;
 };
 
 export type StartAgentRequest = {
@@ -802,6 +858,9 @@ export type TokenState = {
 };
 
 export type Tool = {
+    _meta?: {
+        [key: string]: unknown;
+    };
     annotations?: ToolAnnotations | {
         [key: string]: unknown;
     };
@@ -849,6 +908,7 @@ export type ToolPermission = {
 
 export type ToolRequest = {
     id: string;
+    thoughtSignature?: string | null;
     toolCall: {
         [key: string]: unknown;
     };
@@ -860,6 +920,15 @@ export type ToolResponse = {
         [key: string]: unknown;
     };
 };
+
+export type TunnelInfo = {
+    hostname: string;
+    secret: string;
+    state: TunnelState;
+    url: string;
+};
+
+export type TunnelState = 'idle' | 'starting' | 'running' | 'error' | 'disabled';
 
 export type UpdateCustomProviderRequest = {
     api_key: string;
@@ -1211,6 +1280,13 @@ export type BackupConfigResponses = {
 };
 
 export type BackupConfigResponse = BackupConfigResponses[keyof BackupConfigResponses];
+
+export type CheckProviderData = {
+    body: CheckProviderRequest;
+    path?: never;
+    query?: never;
+    url: '/config/check_provider';
+};
 
 export type CreateCustomProviderData = {
     body: UpdateCustomProviderRequest;
@@ -1578,6 +1654,29 @@ export type RemoveConfigResponses = {
 
 export type RemoveConfigResponse = RemoveConfigResponses[keyof RemoveConfigResponses];
 
+export type SetConfigProviderData = {
+    body: SetProviderRequest;
+    path?: never;
+    query?: never;
+    url: '/config/set_provider';
+};
+
+export type GetSlashCommandsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/config/slash_commands';
+};
+
+export type GetSlashCommandsResponses = {
+    /**
+     * Slash commands retrieved successfully
+     */
+    200: SlashCommandsResponse;
+};
+
+export type GetSlashCommandsResponse = GetSlashCommandsResponses[keyof GetSlashCommandsResponses];
+
 export type UpsertConfigData = {
     body: UpsertConfigQuery;
     path?: never;
@@ -1699,6 +1798,32 @@ export type StartTetrateSetupResponses = {
 };
 
 export type StartTetrateSetupResponse = StartTetrateSetupResponses[keyof StartTetrateSetupResponses];
+
+export type McpUiProxyData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Secret key for authentication
+         */
+        secret: string;
+    };
+    url: '/mcp-ui-proxy';
+};
+
+export type McpUiProxyErrors = {
+    /**
+     * Unauthorized - invalid or missing secret
+     */
+    401: unknown;
+};
+
+export type McpUiProxyResponses = {
+    /**
+     * MCP UI proxy HTML page
+     */
+    200: unknown;
+};
 
 export type CreateRecipeData = {
     body: CreateRecipeRequest;
@@ -1912,6 +2037,56 @@ export type ScanRecipeResponses = {
 };
 
 export type ScanRecipeResponse2 = ScanRecipeResponses[keyof ScanRecipeResponses];
+
+export type ScheduleRecipeData = {
+    body: ScheduleRecipeRequest;
+    path?: never;
+    query?: never;
+    url: '/recipes/schedule';
+};
+
+export type ScheduleRecipeErrors = {
+    /**
+     * Recipe not found
+     */
+    404: unknown;
+    /**
+     * Internal server error
+     */
+    500: unknown;
+};
+
+export type ScheduleRecipeResponses = {
+    /**
+     * Recipe scheduled successfully
+     */
+    200: unknown;
+};
+
+export type SetRecipeSlashCommandData = {
+    body: SetSlashCommandRequest;
+    path?: never;
+    query?: never;
+    url: '/recipes/slash-command';
+};
+
+export type SetRecipeSlashCommandErrors = {
+    /**
+     * Recipe not found
+     */
+    404: unknown;
+    /**
+     * Internal server error
+     */
+    500: unknown;
+};
+
+export type SetRecipeSlashCommandResponses = {
+    /**
+     * Slash command set successfully
+     */
+    200: unknown;
+};
 
 export type ReplyData = {
     body: ChatRequest;
@@ -2186,8 +2361,8 @@ export type SessionsHandlerData = {
          */
         id: string;
     };
-    query?: {
-        limit?: number;
+    query: {
+        limit: number;
     };
     url: '/schedule/{id}/sessions';
 };
@@ -2395,6 +2570,46 @@ export type GetSessionResponses = {
 
 export type GetSessionResponse = GetSessionResponses[keyof GetSessionResponses];
 
+export type EditMessageData = {
+    body: EditMessageRequest;
+    path: {
+        /**
+         * Unique identifier for the session
+         */
+        session_id: string;
+    };
+    query?: never;
+    url: '/sessions/{session_id}/edit_message';
+};
+
+export type EditMessageErrors = {
+    /**
+     * Bad request - Invalid message timestamp
+     */
+    400: unknown;
+    /**
+     * Unauthorized - Invalid or missing API key
+     */
+    401: unknown;
+    /**
+     * Session or message not found
+     */
+    404: unknown;
+    /**
+     * Internal server error
+     */
+    500: unknown;
+};
+
+export type EditMessageResponses = {
+    /**
+     * Session prepared for editing - frontend should submit the edited message
+     */
+    200: EditMessageResponse;
+};
+
+export type EditMessageResponse2 = EditMessageResponses[keyof EditMessageResponses];
+
 export type ExportSessionData = {
     body?: never;
     path: {
@@ -2522,3 +2737,71 @@ export type StatusResponses = {
 };
 
 export type StatusResponse = StatusResponses[keyof StatusResponses];
+
+export type StartTunnelData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/tunnel/start';
+};
+
+export type StartTunnelErrors = {
+    /**
+     * Bad request
+     */
+    400: ErrorResponse;
+    /**
+     * Internal server error
+     */
+    500: ErrorResponse;
+};
+
+export type StartTunnelError = StartTunnelErrors[keyof StartTunnelErrors];
+
+export type StartTunnelResponses = {
+    /**
+     * Tunnel started successfully
+     */
+    200: TunnelInfo;
+};
+
+export type StartTunnelResponse = StartTunnelResponses[keyof StartTunnelResponses];
+
+export type GetTunnelStatusData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/tunnel/status';
+};
+
+export type GetTunnelStatusResponses = {
+    /**
+     * Tunnel info
+     */
+    200: TunnelInfo;
+};
+
+export type GetTunnelStatusResponse = GetTunnelStatusResponses[keyof GetTunnelStatusResponses];
+
+export type StopTunnelData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/tunnel/stop';
+};
+
+export type StopTunnelErrors = {
+    /**
+     * Internal server error
+     */
+    500: ErrorResponse;
+};
+
+export type StopTunnelError = StopTunnelErrors[keyof StopTunnelErrors];
+
+export type StopTunnelResponses = {
+    /**
+     * Tunnel stopped successfully
+     */
+    200: unknown;
+};
