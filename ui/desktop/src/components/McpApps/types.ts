@@ -1,23 +1,46 @@
-// Re-export generated types from Rust
-export type {
-  McpAppResource,
-  CspMetadata,
-  UiMetadata,
-  ResourceMetadata,
-  CallToolResponse as ToolResult,
-} from '../../api/types.gen';
+export type { CspMetadata, CallToolResponse as ToolResult } from '../../api/types.gen';
+
+export type ContentBlock =
+  | { type: 'text'; text: string }
+  | { type: 'image'; data: string; mimeType: string }
+  | {
+      type: 'resource';
+      resource: { uri: string; mimeType?: string; text?: string; blob?: string };
+    };
+
+export type McpMethodParams = {
+  'ui/open-link': { url: string };
+  'ui/message': { role: 'user'; content: ContentBlock[] };
+  'tools/call': { name: string; arguments?: Record<string, unknown> };
+  'resources/read': { uri: string };
+  'notifications/message': { level?: string; logger?: string; data: unknown };
+  ping: Record<string, never>;
+};
+
+export type McpMethodResponse = {
+  'ui/open-link': { status: string; message: string };
+  'ui/message': Record<string, never>;
+  'tools/call': {
+    content: unknown[];
+    isError: boolean;
+    structuredContent?: Record<string, unknown>;
+  };
+  'resources/read': { contents: unknown[] };
+  'notifications/message': Record<string, never>;
+  ping: Record<string, never>;
+};
 
 export interface JsonRpcRequest {
   jsonrpc: '2.0';
   id?: string | number;
   method: string;
-  params?: unknown;
+  params?: Record<string, unknown>;
 }
 
 export interface JsonRpcNotification {
   jsonrpc: '2.0';
   method: string;
-  params?: unknown;
+  params?: Record<string, unknown>;
 }
 
 export interface JsonRpcResponse {
